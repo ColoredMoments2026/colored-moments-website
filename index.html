@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colored Moments — Turn Your Photos Into Coloring Pages</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Instrument+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --rose:   #E8446A;
+  --blush:  #FDE8EF;
+  --teal:   #19B89E;
+  --mint:   #D6F5F0;
+  --cream:  #FDF8F4;
+  --ink:    #180F0A;
+  --muted:  #9E8E86;
+  --warm:   #F2EBE4;
+  --gold:   #D4A853;
+  --shadow: rgba(24,15,10,0.10);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  width: 10px; height: 10px;
+  background: var(--rose);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.15s ease, background 0.2s;
+  transform: translate(-50%, -50%);
+}
+#cursor-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid rgba(232,68,106,0.4);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transition: transform 0.35s ease, width 0.2s, height 0.2s, opacity 0.2s;
+  transform: translate(-50%, -50%);
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 3rem;
+  background: rgba(253,248,244,0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(24,15,10,0.06);
+}
+
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.nav-logo span { color: var(--rose); font-style: italic; }
+
+.nav-links {
+  display: flex; gap: 2rem; list-style: none;
+}
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); }
+
+.nav-cta {
+  background: var(--rose);
+  color: #fff !important;
+  padding: 0.55rem 1.3rem;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em;
+  transition: transform 0.15s, box-shadow 0.15s !important;
+}
+.nav-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(232,68,106,0.3);
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 8rem 3rem 4rem;
+  gap: 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(232,68,106,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 70%, rgba(25,184,158,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Floating dots decoration */
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  top: 15%; right: 8%;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  border: 1px dashed rgba(232,68,106,0.15);
+  animation: spinSlow 30s linear infinite;
+}
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+.hero-left { position: relative; z-index: 1; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--blush);
+  border: 1px solid rgba(232,68,106,0.2);
+  color: var(--rose);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.9rem;
+  border-radius: 100px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+
+.hero-badge::before {
+  content: '★';
+  color: var(--gold);
+}
+
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3rem, 5.5vw, 5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.4rem;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--rose);
+}
+
+h1 .underline-word {
+  position: relative;
+  display: inline-block;
+}
+h1 .underline-word::after {
+  content: '';
+  position: absolute;
+  bottom: 4px; left: 0; right: 0;
+  height: 3px;
+  background: var(--teal);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: lineReveal 0.5s 0.8s ease forwards;
+}
+@keyframes lineReveal { to { transform: scaleX(1); } }
+
+.hero-sub {
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: #5A4840;
+  line-height: 1.7;
+  max-width: 440px;
+  margin-bottom: 2.2rem;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.hero-actions {
+  display: flex; flex-direction: column; gap: 1rem;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+  background: var(--rose);
+  color: #fff;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 1.1rem 2.5rem;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  width: fit-content;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(232,68,106,0.35);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-primary .arrow { font-size: 1.1rem; transition: transform 0.2s; }
+.btn-primary:hover .arrow { transform: translateX(4px); }
+
+.hero-trust {
+  display: flex; align-items: center; gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stars-row { color: var(--gold); letter-spacing: -1px; font-size: 0.9rem; }
+
+.trust-sep {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--muted); opacity: 0.4;
+}
+
+/* ── HERO RIGHT: TRANSFORMATION VISUAL ── */
+.hero-right {
+  position: relative; z-index: 1;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+.transform-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px var(--shadow), 0 4px 12px rgba(24,15,10,0.06);
+  position: relative;
+}
+
+.transform-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.transform-panels {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.transform-img {
+  aspect-ratio: 3/4;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Photo simulation — warm family photo */
+.photo-sim {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #D4A470 0%, #A06830 40%, #C88050 70%, #906028 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-sim::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle 30% at 50% 30%, rgba(255,220,180,0.6) 0%, transparent 60%),
+    radial-gradient(circle 20% at 30% 60%, rgba(180,120,70,0.4) 0%, transparent 50%);
+}
+
+/* Silhouette person shapes */
+.photo-sim .figure {
+  position: absolute;
+  bottom: 10%;
+  border-radius: 50% 50% 0 0;
+}
+.photo-sim .fig-1 {
+  width: 35%; height: 55%;
+  left: 20%;
+  background: rgba(80,40,10,0.5);
+  border-radius: 50% 50% 10px 10px;
+}
+.photo-sim .fig-2 {
+  width: 30%; height: 45%;
+  left: 50%;
+  background: rgba(60,30,8,0.45);
+  border-radius: 50% 50% 10px 10px;
+}
+.photo-sim .head-1 {
+  width: 22%; height: 18%;
+  left: 27%; bottom: 60%;
+  background: rgba(90,50,15,0.55);
+  border-radius: 50%;
+  position: absolute;
+}
+.photo-sim .head-2 {
+  width: 18%; height: 14%;
+  left: 55%; bottom: 52%;
+  background: rgba(70,35,10,0.5);
+  border-radius: 50%;
+  position: absolute;
+}
+.photo-sim .bg-blur {
+  position: absolute; top: 0; left: 0; right: 0; height: 45%;
+  background: linear-gradient(to bottom, rgba(100,160,100,0.3), transparent);
+}
+
+/* Coloring page simulation */
+.coloring-sim {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.coloring-sim .lines {
+  position: absolute; inset: 8px;
+  border: 2px solid #1A1006;
+  border-radius: 8px;
+}
+
+/* SVG-like line art of person silhouettes */
+.coloring-sim::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.04) 6px, rgba(0,0,0,0.04) 7px),
+    repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(0,0,0,0.04) 6px, rgba(0,0,0,0.04) 7px);
+}
+
+.coloring-sim .outline-fig {
+  position: absolute;
+  bottom: 8%;
+  border: 2px solid #1A1006;
+  background: transparent;
+}
+.coloring-sim .of-1 {
+  width: 34%; height: 54%;
+  left: 20%;
+  border-radius: 50% 50% 10px 10px;
+}
+.coloring-sim .of-2 {
+  width: 29%; height: 44%;
+  left: 50%;
+  border-radius: 50% 50% 10px 10px;
+}
+.coloring-sim .oh-1 {
+  width: 21%; height: 17%;
+  left: 27%; bottom: 59%;
+  border-radius: 50%;
+  border: 2px solid #1A1006;
+  background: transparent;
+  position: absolute;
+}
+.coloring-sim .oh-2 {
+  width: 17%; height: 13%;
+  left: 55%; bottom: 51%;
+  border-radius: 50%;
+  border: 2px solid #1A1006;
+  background: transparent;
+  position: absolute;
+}
+/* Detail lines */
+.coloring-sim::after {
+  content: '';
+  position: absolute;
+  top: 15%; left: 10%; right: 10%; height: 35%;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(24,15,10,0.12) 8px, rgba(24,15,10,0.12) 9px);
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+}
+
+.transform-arrow {
+  width: 36px; height: 36px;
+  background: var(--rose);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(232,68,106,0.3);
+}
+
+.transform-tags {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-top: 1.2rem;
+  justify-content: center;
+}
+
+.ttag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.28rem 0.65rem;
+  border-radius: 100px;
+  background: var(--warm);
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+/* Floating badge on card */
+.float-badge {
+  position: absolute;
+  top: -14px; right: 24px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  box-shadow: 0 4px 12px rgba(25,184,158,0.3);
+  white-space: nowrap;
+}
+
+/* ── SOCIAL PROOF BAR ── */
+#proof-bar {
+  background: var(--ink);
+  padding: 1.2rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.proof-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.82rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.proof-item strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.proof-divider { color: rgba(255,255,255,0.15); font-size: 1.2rem; }
+
+/* ── HOW IT WORKS ── */
+#how {
+  padding: 6rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.section-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 0.75rem;
+}
+
+.section-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 0.8rem;
+}
+
+.section-sub {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 460px;
+  margin: 0 auto 3.5rem;
+  line-height: 1.65;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 52px; left: 18%; right: 18%;
+  height: 1px;
+  background: linear-gradient(to right, var(--rose), var(--teal));
+  z-index: 0;
+}
+
+.step {
+  background: #fff;
+  border-radius: 24px;
+  padding: 2.2rem 1.8rem;
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid rgba(24,15,10,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.step:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+.step-num {
+  width: 52px; height: 52px;
+  background: var(--blush);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--rose);
+  margin: 0 auto 1.3rem;
+}
+
+.step:nth-child(2) .step-num { background: var(--warm); color: var(--gold); }
+.step:nth-child(3) .step-num { background: var(--mint); color: var(--teal); }
+
+.step h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.step p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── REVIEWS ── */
+#reviews {
+  background: var(--ink);
+  padding: 6rem 3rem;
+  overflow: hidden;
+}
+
+#reviews .section-heading { color: #fff; }
+#reviews .section-eyebrow { color: var(--teal); }
+#reviews .section-sub { color: rgba(255,255,255,0.45); }
+
+.reviews-track-outer { overflow: hidden; }
+
+.reviews-track {
+  display: flex;
+  gap: 1.2rem;
+  animation: scrollTrack 28s linear infinite;
+  width: max-content;
+}
+
+@keyframes scrollTrack {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.review-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 1.6rem 1.8rem;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.review-stars { color: var(--gold); font-size: 0.85rem; margin-bottom: 0.8rem; letter-spacing: 1px; }
+
+.review-text {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  margin-bottom: 1.1rem;
+  font-style: italic;
+}
+
+.review-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── PRICING ── */
+#pricing {
+  padding: 6rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr 1fr;
+  gap: 1rem;
+  margin-top: 3rem;
+  align-items: start;
+}
+
+.price-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 2rem 1.6rem;
+  border: 1.5px solid rgba(24,15,10,0.08);
+  text-align: left;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.price-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+.price-card.featured {
+  background: var(--ink);
+  color: #fff;
+  border-color: transparent;
+  transform: scale(1.03);
+}
+.price-card.featured:hover { transform: scale(1.03) translateY(-4px); }
+
+.popular-badge {
+  position: absolute;
+  top: -14px; left: 50%; transform: translateX(-50%);
+  background: var(--rose);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 1rem;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.price-tier {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 0.5rem;
+}
+
+.price-card.featured .price-tier { color: var(--teal); }
+
+.price-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.price-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--rose);
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+.price-card.featured .price-amount { color: var(--teal); }
+
+.price-period {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  font-family: 'DM Mono', monospace;
+}
+.price-card.featured .price-period { color: rgba(255,255,255,0.4); }
+
+.price-features {
+  list-style: none;
+  font-size: 0.83rem;
+  line-height: 2;
+  margin-bottom: 1.8rem;
+}
+
+.price-features li {
+  display: flex; align-items: baseline; gap: 0.5rem;
+}
+.price-features li::before {
+  content: '✓';
+  color: var(--teal);
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+.price-card.featured .price-features { color: rgba(255,255,255,0.8); }
+
+.btn-buy {
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.btn-buy-outline {
+  background: transparent;
+  border: 1.5px solid rgba(24,15,10,0.15);
+  color: var(--ink);
+}
+.btn-buy-outline:hover {
+  border-color: var(--rose);
+  color: var(--rose);
+}
+
+.btn-buy-primary {
+  background: var(--rose);
+  color: #fff;
+}
+.btn-buy-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(232,68,106,0.3);
+}
+
+.btn-buy-featured {
+  background: var(--teal);
+  color: var(--ink);
+}
+.btn-buy-featured:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(25,184,158,0.3);
+}
+
+/* ── FAQ ── */
+#faq {
+  background: var(--warm);
+  padding: 6rem 3rem;
+}
+
+.faq-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.faq-list { text-align: left; margin-top: 2.5rem; }
+
+.faq-item {
+  border-bottom: 1px solid rgba(24,15,10,0.08);
+  overflow: hidden;
+}
+
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 1.2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  gap: 1rem;
+}
+
+.faq-icon {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--blush);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--rose);
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s, background 0.2s;
+  line-height: 1;
+}
+
+.faq-item.open .faq-icon {
+  transform: rotate(45deg);
+  background: var(--rose);
+  color: #fff;
+}
+
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.2s;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 0;
+}
+
+.faq-item.open .faq-a {
+  max-height: 200px;
+  padding-bottom: 1.2rem;
+}
+
+/* ── EMAIL CAPTURE / CTA SECTION ── */
+#cta {
+  padding: 6rem 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(232,68,106,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-inner { max-width: 540px; margin: 0 auto; position: relative; z-index: 1; }
+
+.cta-inner .section-heading { font-size: clamp(2rem, 4vw, 3.2rem); }
+.cta-inner .section-sub { margin-bottom: 2rem; }
+
+.email-form {
+  display: flex;
+  background: #fff;
+  border: 1.5px solid rgba(24,15,10,0.1);
+  border-radius: 100px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px var(--shadow);
+  padding: 0.35rem 0.35rem 0.35rem 1.4rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.email-form:focus-within {
+  border-color: var(--rose);
+  box-shadow: 0 8px 30px rgba(232,68,106,0.15);
+}
+
+.email-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: transparent;
+  min-width: 0;
+}
+.email-input::placeholder { color: var(--muted); }
+
+.email-submit {
+  background: var(--rose);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  padding: 0.75rem 1.6rem;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+.email-submit:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(232,68,106,0.35);
+}
+
+.cta-guarantee {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+}
+
+/* ── UPSELL MODAL ── */
+#modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(24,15,10,0.55);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#modal-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 28px;
+  padding: 2.5rem;
+  max-width: 460px;
+  width: 100%;
+  position: relative;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s;
+  box-shadow: 0 30px 80px rgba(24,15,10,0.2);
+}
+
+#modal-overlay.visible .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--warm);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  color: var(--muted);
+  transition: background 0.15s;
+}
+.modal-close:hover { background: var(--blush); color: var(--rose); }
+
+.modal-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 0.5rem;
+}
+
+.modal h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.8rem;
+}
+
+.modal p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+
+.modal-offer {
+  background: var(--blush);
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-offer-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.modal-offer-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.modal-offer-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--rose);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.modal-offer-orig {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  text-align: right;
+}
+
+.modal-cta {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 100px;
+  background: var(--rose);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-bottom: 0.75rem;
+}
+.modal-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(232,68,106,0.3);
+}
+
+.modal-skip {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  text-decoration: underline;
+  font-family: 'Instrument Sans', sans-serif;
+  transition: color 0.15s;
+}
+.modal-skip:hover { color: var(--ink); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.4);
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.78rem;
+}
+
+footer .footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+footer .footer-logo span { color: var(--rose); font-style: italic; }
+
+footer a { color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.15s; }
+footer a:hover { color: #fff; }
+
+.footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  #hero { grid-template-columns: 1fr; padding: 6rem 1.5rem 3rem; gap: 3rem; text-align: center; }
+  .hero-sub { margin: 0 auto 2rem; }
+  .hero-actions { align-items: center; }
+  .hero-trust { justify-content: center; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
+  .price-card.featured { transform: none; }
+  nav { padding: 1rem 1.5rem; }
+  .nav-links { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .steps::before { display: none; }
+}
+
+@media (max-width: 540px) {
+  #hero { padding: 5rem 1.2rem 3rem; }
+  #how, #reviews, #pricing, #faq, #cta { padding: 4rem 1.2rem; }
+  #proof-bar { gap: 1.5rem; padding: 1.2rem; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .email-form { flex-direction: column; border-radius: 16px; padding: 0.6rem; gap: 0.5rem; }
+  .email-input { padding: 0.4rem 0.6rem; }
+  .email-submit { border-radius: 10px; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Colored<span>Moments</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#pricing" class="nav-cta">Try Free →</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+
+  <div class="hero-left">
+    <div class="hero-badge">Trusted by 1,000+ families · 200+ five-star reviews</div>
+    <h1>Turn your<br><em>favorite photos</em><br>into <span class="underline-word">coloring pages</span></h1>
+    <p class="hero-sub">Upload any photo — family portraits, pets, weddings, milestones — and we'll transform it into a stunning, detail-rich coloring page in seconds. The most thoughtful gift you can give.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">
+        Get Your Free Page <span class="arrow">→</span>
+      </a>
+      <div class="hero-trust">
+        <span class="stars-row">★★★★★</span>
+        <span class="trust-sep"></span>
+        <span>200+ five-star reviews on Etsy</span>
+        <span class="trust-sep"></span>
+        <span>No credit card needed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="transform-card">
+      <div class="float-badge">✨ AI-Powered · Instant Delivery</div>
+      <div class="transform-label">Your photo → coloring page</div>
+      <div class="transform-panels">
+        <div class="transform-img">
+          <div class="photo-sim">
+            <div class="bg-blur"></div>
+            <div class="figure fig-1"></div>
+            <div class="figure fig-2"></div>
+            <div class="head-1"></div>
+            <div class="head-2"></div>
+          </div>
+        </div>
+        <div class="transform-arrow">→</div>
+        <div class="transform-img">
+          <div class="coloring-sim">
+            <div class="lines"></div>
+            <div class="outline-fig of-1"></div>
+            <div class="outline-fig of-2"></div>
+            <div class="oh-1"></div>
+            <div class="oh-2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="transform-tags">
+        <span class="ttag">HD Print-Ready</span>
+        <span class="ttag">True Likeness</span>
+        <span class="ttag">10+ Art Styles</span>
+        <span class="ttag">Instant PDF</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF BAR -->
+<div id="proof-bar">
+  <div class="proof-item"><strong>1,000+</strong> happy customers</div>
+  <div class="proof-divider">|</div>
+  <div class="proof-item"><strong>200+</strong> five-star reviews</div>
+  <div class="proof-divider">|</div>
+  <div class="proof-item"><strong>10+</strong> art styles</div>
+  <div class="proof-divider">|</div>
+  <div class="proof-item"><strong>Instant</strong> delivery</div>
+  <div class="proof-divider">|</div>
+  <div class="proof-item"><strong>100%</strong> satisfaction guarantee</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-eyebrow">Simple as 1–2–3</div>
+  <h2 class="section-heading reveal">From photo to coloring page<br><em>in under a minute</em></h2>
+  <p class="section-sub reveal">No design skills needed. No waiting days for delivery. Just pure, instant magic.</p>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <h3>Upload Your Photo</h3>
+      <p>Choose any photo — a family portrait, wedding shot, beloved pet, or milestone moment. Any image works beautifully.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:0.1s">
+      <div class="step-num">2</div>
+      <h3>Pick Your Style</h3>
+      <p>Choose from 10+ art styles: detailed realistic, whimsical storybook, bold graphic, soft sketch, and more. Each transforms your photo in a unique way.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:0.2s">
+      <div class="step-num">3</div>
+      <h3>Download & Enjoy</h3>
+      <p>Your print-ready PDF arrives instantly. Print at home, at a shop, or let us mail you a premium physical copy. Color together, gift it, frame it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div style="text-align:center; margin-bottom:3rem;">
+    <div class="section-eyebrow">Real Families, Real Joy</div>
+    <h2 class="section-heading reveal">What our customers say</h2>
+    <p class="section-sub reveal">Over 200 five-star reviews from families who turned their most treasured photos into unforgettable experiences.</p>
+  </div>
+
+  <div class="reviews-track-outer">
+    <div class="reviews-track" id="reviewTrack">
+      <!-- Set 1 -->
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"I ordered this as a birthday gift for my mom and she absolutely cried. The likeness to our family photo was incredible. She said it was the most thoughtful gift she'd ever received."</p>
+        <div class="review-author">Sarah M. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Ordered a coloring page of my late dog for my daughter. She was so happy coloring it. The detail was amazing — you could really see his personality in the lines."</p>
+        <div class="review-author">James T. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Used this for my wedding party as a unique favor. Everyone got their own coloring page. Guests were OBSESSED. Will absolutely order again for every occasion."</p>
+        <div class="review-author">Priya K. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"My kids spent an entire afternoon coloring pages of our family vacation photos. It turned into a tradition. We do it every month now. Best discovery of the year."</p>
+        <div class="review-author">Dana R. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"I'm an art teacher and I use these for my students. The quality is phenomenal — crisp lines, great detail, they actually look like the photos. My students love it."</p>
+        <div class="review-author">Ms. Chen · Art Teacher</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Ordered the bundle as a Christmas gift for my parents — photos of all their grandkids. My mom framed one after coloring it. I've never seen her happier opening a gift."</p>
+        <div class="review-author">Michael B. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Absolutely stunning quality. I was skeptical at first but the likeness to my cat was spot on. This is genuinely the best gift idea I've found in years. Already ordering more."</p>
+        <div class="review-author">Lisa F. · Verified Buyer</div>
+      </div>
+      <!-- Set 2 — duplicate for infinite scroll -->
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"I ordered this as a birthday gift for my mom and she absolutely cried. The likeness to our family photo was incredible. She said it was the most thoughtful gift she'd ever received."</p>
+        <div class="review-author">Sarah M. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Ordered a coloring page of my late dog for my daughter. She was so happy coloring it. The detail was amazing — you could really see his personality in the lines."</p>
+        <div class="review-author">James T. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Used this for my wedding party as a unique favor. Everyone got their own coloring page. Guests were OBSESSED. Will absolutely order again for every occasion."</p>
+        <div class="review-author">Priya K. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"My kids spent an entire afternoon coloring pages of our family vacation photos. It turned into a tradition. We do it every month now. Best discovery of the year."</p>
+        <div class="review-author">Dana R. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"I'm an art teacher and I use these for my students. The quality is phenomenal — crisp lines, great detail, they actually look like the photos. My students love it."</p>
+        <div class="review-author">Ms. Chen · Art Teacher</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Ordered the bundle as a Christmas gift for my parents — photos of all their grandkids. My mom framed one after coloring it. I've never seen her happier opening a gift."</p>
+        <div class="review-author">Michael B. · Verified Buyer</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Absolutely stunning quality. I was skeptical at first but the likeness to my cat was spot on. This is genuinely the best gift idea I've found in years. Already ordering more."</p>
+        <div class="review-author">Lisa F. · Verified Buyer</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-eyebrow">Simple, Transparent Pricing</div>
+  <h2 class="section-heading reveal">Start free. Upgrade when<br><em>you're amazed.</em></h2>
+  <p class="section-sub reveal">No subscriptions required to start. Get your first page free — no credit card needed.</p>
+
+  <div class="pricing-grid">
+
+    <!-- Free -->
+    <div class="price-card reveal">
+      <div class="price-tier">Free</div>
+      <div class="price-name">The Sample</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">One page · watermarked</div>
+      <ul class="price-features">
+        <li>1 coloring page</li>
+        <li>3 style choices</li>
+        <li>Instant preview</li>
+        <li>Watermark on download</li>
+      </ul>
+      <button class="btn-buy btn-buy-outline" onclick="openModal()">Try Free →</button>
+    </div>
+
+    <!-- Single -->
+    <div class="price-card reveal" style="transition-delay:0.05s">
+      <div class="price-tier">Entry</div>
+      <div class="price-name">Single Page</div>
+      <div class="price-amount">$9</div>
+      <div class="price-period">Per page · no watermark</div>
+      <ul class="price-features">
+        <li>1 HD coloring page</li>
+        <li>3 art styles</li>
+        <li>Print-ready PDF</li>
+        <li>1 revision included</li>
+        <li>Digital delivery</li>
+      </ul>
+      <button class="btn-buy btn-buy-primary" onclick="openModal()">Buy Single Page</button>
+    </div>
+
+    <!-- Bundle — Featured -->
+    <div class="price-card featured reveal" style="transition-delay:0.1s">
+      <div class="popular-badge">⭐ Most Popular</div>
+      <div class="price-tier">Best Value</div>
+      <div class="price-name">Memory Bundle</div>
+      <div class="price-amount">$27</div>
+      <div class="price-period">5 pages · save 40%</div>
+      <ul class="price-features">
+        <li>5 HD coloring pages</li>
+        <li>All 10+ art styles</li>
+        <li>Gift-ready PDF booklet</li>
+        <li>Priority processing</li>
+        <li>3 revisions per page</li>
+        <li>Shareable link</li>
+      </ul>
+      <button class="btn-buy btn-buy-featured" onclick="openModal()">Get the Bundle</button>
+    </div>
+
+    <!-- Club -->
+    <div class="price-card reveal" style="transition-delay:0.15s">
+      <div class="price-tier">Recurring</div>
+      <div class="price-name">Moments Club</div>
+      <div class="price-amount">$19</div>
+      <div class="price-period">Per month · cancel anytime</div>
+      <ul class="price-features">
+        <li>4 pages/month</li>
+        <li>All styles + early access</li>
+        <li>Member-only themes</li>
+        <li>Birthday reminders</li>
+        <li>Referral bonuses</li>
+      </ul>
+      <button class="btn-buy btn-buy-outline" onclick="openModal()">Join the Club</button>
+    </div>
+
+  </div>
+
+  <!-- Guarantee strip -->
+  <div style="margin-top:2rem; display:flex; align-items:center; justify-content:center; gap:2rem; flex-wrap:wrap; padding:1.5rem; background:#fff; border-radius:16px; border:1.5px solid rgba(24,15,10,0.06);">
+    <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.82rem; color:var(--muted);">
+      <span style="font-size:1.2rem;">🔒</span> Secure checkout via Stripe
+    </div>
+    <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.82rem; color:var(--muted);">
+      <span style="font-size:1.2rem;">✉️</span> Instant digital delivery
+    </div>
+    <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.82rem; color:var(--muted);">
+      <span style="font-size:1.2rem;">💯</span> 100% satisfaction guarantee
+    </div>
+    <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.82rem; color:var(--muted);">
+      <span style="font-size:1.2rem;">🎁</span> Perfect for any occasion
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="faq-inner">
+    <div class="section-eyebrow">Got Questions?</div>
+    <h2 class="section-heading reveal">Everything you need to know</h2>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What kind of photos work best?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Any clear photo works! Portraits with good lighting produce the sharpest detail. We handle family photos, pet portraits, wedding shots, vacation memories, and more. The clearer the original, the more incredible the coloring page.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How quickly will I receive my coloring page?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Instantly! Your PDF is generated in seconds and delivered immediately to your email. Bundle orders with revisions may take a few minutes, but most orders arrive before you finish checking out.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I print the pages at home?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Absolutely. Every page is delivered as a print-ready, high-resolution PDF. Print at home, at a local print shop, or at any office supply store. Standard 8.5×11 or A4 paper works perfectly. You can print as many copies as you like.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What is the Heirloom Book?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">The Heirloom Book is our premium printed product — a real, hardcover coloring book made from your photos, printed and shipped to you. Perfect for grandparents, anniversary gifts, memorial keepsakes, and family reunion gifts. Starting at $97.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What's your satisfaction guarantee?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">We stand behind every page. If you're not happy with the quality, we'll redo it for free or refund you — no questions asked. Over 1,000 customers and 200+ five-star reviews say it all. We don't stop until you love it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I cancel the Moments Club subscription?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Yes, cancel anytime with one click — no phone calls, no hoops. Your membership continues until the end of your billing period. We'll even send you a reminder before any renewal.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL CTA -->
+<section id="cta">
+  <div class="cta-inner">
+    <div class="section-eyebrow">Don't miss a moment</div>
+    <h2 class="section-heading reveal">Get your first page<br><em>absolutely free</em></h2>
+    <p class="section-sub reveal">Drop your email and we'll send you a free coloring page credit, plus style inspiration and gift ideas your family will actually love.</p>
+
+    <div class="email-form">
+      <input class="email-input" type="email" placeholder="your@email.com" />
+      <button class="email-submit" onclick="handleEmailSubmit()">Claim Free Page →</button>
+    </div>
+    <div class="cta-guarantee">
+      <span>🔒</span> No spam. No credit card. Unsubscribe anytime.
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Colored<span>Moments</span></div>
+  <div class="footer-links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+    <a href="#pricing">Try Free</a>
+  </div>
+  <div>© 2025 Colored Moments. All rights reserved.</div>
+</footer>
+
+<!-- UPSELL MODAL -->
+<div id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-eyebrow">⚡ One-time offer</div>
+    <h2>Wait — don't leave<br>without this deal</h2>
+    <p>Your free page is ready. But for the next 5 minutes, you can unlock 5 full pages for the price of one. Most families need more than one — and this bundle saves you 40%.</p>
+
+    <div class="modal-offer">
+      <div>
+        <div class="modal-offer-name">Memory Bundle — 5 Pages</div>
+        <div class="modal-offer-desc">All styles · Gift booklet · 3 revisions · Instant PDF</div>
+      </div>
+      <div>
+        <div class="modal-offer-price">$27</div>
+        <div class="modal-offer-orig">Was $45</div>
+      </div>
+    </div>
+
+    <button class="modal-cta" onclick="closeModal()">Yes! Give me the bundle →</button>
+    <button class="modal-skip" onclick="closeModal()">No thanks, I'll just take my one free page</button>
+  </div>
+</div>
+
+<script>
+// ── CUSTOM CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+
+function animateRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+document.querySelectorAll('a, button, input').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+    ring.style.width = '50px'; ring.style.height = '50px';
+    ring.style.opacity = '0.5';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+    ring.style.width = '36px'; ring.style.height = '36px';
+    ring.style.opacity = '1';
+  });
+});
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.15 });
+reveals.forEach(r => obs.observe(r));
+
+// ── FAQ ──
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// ── MODAL ──
+let modalTimer;
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// Show modal after 45 seconds (exit-intent simulation for demo — shows after 8s)
+setTimeout(() => { openModal(); }, 8000);
+
+// ── EMAIL SUBMIT ──
+function handleEmailSubmit() {
+  const input = document.querySelector('.email-input');
+  if (!input.value || !input.value.includes('@')) {
+    input.style.borderBottom = '2px solid var(--rose)';
+    input.placeholder = 'Please enter a valid email';
+    return;
+  }
+  const btn = document.querySelector('.email-submit');
+  btn.textContent = '✓ You\'re in!';
+  btn.style.background = 'var(--teal)';
+  input.value = '';
+  setTimeout(() => openModal(), 1200);
+}
+
+// ── PAUSE SCROLL TRACK ON HOVER ──
+const track = document.getElementById('reviewTrack');
+if (track) {
+  track.addEventListener('mouseenter', () => track.style.animationPlayState = 'paused');
+  track.addEventListener('mouseleave', () => track.style.animationPlayState = 'running');
+}
+</script>
+
+</body>
+</html>

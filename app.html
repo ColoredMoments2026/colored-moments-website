@@ -736,43 +736,54 @@ function handleAuth(method) {
     const pass = document.getElementById('inp-pass').value.trim();
     const consent = document.getElementById('consent-email').checked;
 
-    if (!email || !email.includes('@')) { showToast('Please enter a valid email address'); return; }
-    if (!pass || pass.length < 4) { showToast('Password must be at least 4 characters'); return; }
-    if (isSignup && !consent) { showToast('Please agree to receive updates to continue'); return; }
-
-    // Check if existing user on login
-    if (!isSignup) {
-      const existing = localStorage.getItem('cm_user');
-      if (!existing) { showToast('No account found. Please sign up first.'); return; }
-      const parsed = JSON.parse(existing);
-      if (parsed.email !== email) { showToast('Email not found. Please sign up.'); return; }
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid email address');
+      return;
+    }
+    if (!pass || pass.length < 4) {
+      showToast('Password must be at least 4 characters');
+      return;
+    }
+    if (isSignup && !consent) {
+      showToast('Please check the consent box to continue');
+      return;
     }
 
     const existing = localStorage.getItem('cm_user');
     const existingData = existing ? JSON.parse(existing) : {};
 
     currentUser = {
-      email,
+      email: email,
       method: 'email',
       emailConsent: consent,
       freePageUsed: existingData.freePageUsed || false,
       isPaid: existingData.isPaid || false,
       createdAt: existingData.createdAt || new Date().toISOString()
     };
+
   } else {
     const phone = document.getElementById('inp-phone').value.trim();
     const pass = document.getElementById('inp-pass-phone').value.trim();
     const consent = document.getElementById('consent-phone').checked;
 
-    if (!phone || phone.length < 7) { showToast('Please enter a valid phone number'); return; }
-    if (!pass || pass.length < 4) { showToast('Password must be at least 4 characters'); return; }
-    if (isSignup && !consent) { showToast('Please agree to receive text messages to continue'); return; }
+    if (!phone || phone.length < 7) {
+      showToast('Please enter a valid phone number');
+      return;
+    }
+    if (!pass || pass.length < 4) {
+      showToast('Password must be at least 4 characters');
+      return;
+    }
+    if (isSignup && !consent) {
+      showToast('Please check the consent box to continue');
+      return;
+    }
 
     const existing = localStorage.getItem('cm_user');
     const existingData = existing ? JSON.parse(existing) : {};
 
     currentUser = {
-      phone,
+      phone: phone,
       method: 'phone',
       smsConsent: consent,
       freePageUsed: existingData.freePageUsed || false,
@@ -786,7 +797,6 @@ function handleAuth(method) {
   showToast(isSignup ? '🎉 Account created! Welcome to Colored Moments.' : '👋 Welcome back!');
   showScreen('upload');
 }
-
 // ═══════════════════════════════════════════════
 // UPLOAD SCREEN
 // ═══════════════════════════════════════════════
